@@ -1,0 +1,31 @@
+declare var tjs: any;
+import { filterWithCache, filterWithSearchResult, keyword } from './utils';
+import { resultItem } from './type';
+
+// 判断是否需要刷新缓存
+const needRefresh: boolean = Array.from(tjs.args).includes('--r');
+
+async function main() {
+  let result: resultItem[] = await filterWithCache();
+  let fromCache = true;
+  // 如果缓存结果为空或者需要刷新缓存，则重新搜索
+  if (!result.length || needRefresh) {
+    result = await filterWithSearchResult();
+    fromCache = false;
+  }
+  // 如果是从缓存中获取的内容，最后加上刷新的入口
+  if (fromCache) {
+    result.push({
+      title: '忽略缓存重新搜索',
+      subtitle: '以上结果从缓存中获得,选择本条将重新搜索项目并更新缓存',
+      arg: keyword,
+      valid: true,
+      icon: {
+        path: 'assets/refresh.png',
+      },
+    });
+  }
+  console.log(JSON.stringify({ items: result }));
+}
+
+main();
