@@ -9,22 +9,38 @@ if (!workspace) {
   workspace = `${tjs.getenv('HOME')}/Documents`;
 }
 
-// 项目搜索关键词
-export const keyword: string = (Array.from(tjs.args).pop() as string) ?? '';
-
 // 缓存路径
 const cachePath = path.join(tjs.cwd(), '.cache.json');
 
 // 写入缓存
-export async function writeCache(cache: Project[]): Promise<void> {
+export async function writeCache(newCache: Project[]): Promise<void> {
   try {
     const cacheFile = await tjs.fs.open(cachePath, 'rw', 0o666);
-    const historyString = JSON.stringify(cache);
+    const historyString = JSON.stringify(newCache, null, 2);
     await cacheFile.write(historyString);
     cacheFile.close();
   } catch (error: any) {
     console.log(error.message);
   }
+}
+
+// 更新缓存时合并项目点击数
+async function combinedCache(newCache: Project[]): Promise<Project[]> {
+  const cache = await readCache();
+  // 筛选有点击记录的项目
+  const beenClickList = {} as { [key: string]: number };
+  cache
+    .filter((item: Project) => item.hits > 0 || item.idePath)
+    .forEach((item: Project) => {
+      beenClickList[item.path] = item.hits;
+    });
+  // 合并点击数
+  newCache.forEach((item: Project) => {
+    const cacheHits = beenClickList[item.path] ?? 0;
+    item.hits = item.hits > cacheHits ? item.hits : cacheHits;
+    item.idePath = item.idePath || '';
+  });
+  return newCache;
 }
 
 // 读取文件内容
@@ -71,6 +87,8 @@ export async function findProject(dirPath: string): Promise<Project[]> {
       name: path.basename(dirPath),
       path: dirPath,
       type: await projectTypeParse(currentChildren),
+      hits: 0,
+      idePath: '',
     });
   } else {
     const nextLevelDir = currentChildren.filter(
@@ -146,23 +164,28 @@ export function output(projectList: Project[]): resultItem[] {
 }
 
 // 过滤项目
-export function filterProject(projectList: Project[]) {
+export function filterProject(
+  projectList: Project[],
+  keyword: string
+): Project[] {
   const result = projectList.filter(({ name }: { name: string }) => {
     const reg = new RegExp(keyword, 'i');
     return reg.test(name);
   });
-  return result;
+  return result.sort((a: Project, b: Project) => b.hits - a.hits);
 }
 
 // 从缓存中过滤
-export async function filterWithCache() {
+export async function filterWithCache(keyword: string): Promise<resultItem[]> {
   const cache = await readCache();
-  return output(filterProject(cache));
+  return output(filterProject(cache, keyword));
 }
 
 // 从搜索结果中过滤
-export async function filterWithSearchResult() {
+export async function filterWithSearchResult(
+  keyword: string
+): Promise<resultItem[]> {
   const projectList: Project[] = await findProject(workspace);
-  writeCache(projectList);
-  return output(filterProject(projectList));
+  writeCache(await combinedCache(projectList));
+  return output(filterProject(projectList, keyword));
 }

@@ -4,12 +4,15 @@ const webpack = require('webpack');
 module.exports = {
   mode: 'development',
   target: "node",
-  entry: path.join(__dirname, "src", 'index'),
+  entry: {
+    index: path.join(__dirname, "src", 'index'),
+    hits: path.join(__dirname, "src", 'hits'),
+  },
   watch: false,
   output: {
     path: path.join(__dirname, 'dist'),
     publicPath: '/dist/',
-    filename: "index.js",
+    filename: "[name].js",
     chunkFilename: '[name].js'
   },
   module: {
