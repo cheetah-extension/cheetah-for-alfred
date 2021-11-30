@@ -22,6 +22,7 @@ sudo spctl --master-disable
 # 回车后会要求输入系统登录密码
 ```
 完成以后再尝试运行，如果有安全性方面的顾虑可以自己编译 txiki 可执行文件替换到 Alfred Workflows 目录下的 runtime 文件夹。
+
 ![](https://pic.fmcat.top/picgo/20211130101413.png)
 
 ### 针对单个项目的编辑器配置
