@@ -10,6 +10,8 @@ export interface Project {
   name: string;
   path: string;
   type: string;
+  hits: number;
+  idePath: string;
 }
 
 // 返回给 Alfred 的条目信息
