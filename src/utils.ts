@@ -172,7 +172,22 @@ export function filterProject(
     const reg = new RegExp(keyword, 'i');
     return reg.test(name);
   });
-  return result.sort((a: Project, b: Project) => b.hits - a.hits);
+
+  // 排序规则：项目名称以关键词开头的权重最高，剩余的以点击量降序排序
+  const startMatch: Project[] = [];
+  const otherMatch: Project[] = [];
+  result.forEach((item) => {
+    if (item.name.startsWith(keyword)) {
+      startMatch.push(item);
+    } else {
+      otherMatch.push(item);
+    }
+  });
+
+  return [
+    ...startMatch.sort((a: Project, b: Project) => b.hits - a.hits),
+    ...otherMatch.sort((a: Project, b: Project) => b.hits - a.hits),
+  ];
 }
 
 // 从缓存中过滤
