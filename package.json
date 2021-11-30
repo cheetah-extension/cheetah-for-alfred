@@ -1,6 +1,6 @@
 {
   "name": "fmcat-open-project",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "搜索并使用编辑器打开项目",
   "main": "index.js",
   "scripts": {
