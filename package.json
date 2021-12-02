@@ -1,10 +1,10 @@
 {
   "name": "fmcat-open-project",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "搜索并使用编辑器打开项目",
   "main": "index.js",
   "scripts": {
-    "test": "workspace=$HOME/work dist/runtime/txiki dist/index.js dart",
+    "test": "workspace=/Users/caohaoxia/Documents/work/self dist/runtime/txiki dist/index.js maple",
     "watch": "webpack --mode none --watch",
     "compile": "webpack --mode production"
   },

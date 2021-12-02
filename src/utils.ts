@@ -28,17 +28,18 @@ export async function writeCache(newCache: Project[]): Promise<void> {
 async function combinedCache(newCache: Project[]): Promise<Project[]> {
   const cache = await readCache();
   // 筛选有点击记录的项目
-  const beenClickList = {} as { [key: string]: number };
+  const needMergeList = {} as { [key: string]: Project };
   cache
     .filter((item: Project) => item.hits > 0 || item.idePath)
     .forEach((item: Project) => {
-      beenClickList[item.path] = item.hits;
+      needMergeList[item.path] = item;
     });
   // 合并点击数
   newCache.forEach((item: Project) => {
-    const cacheHits = beenClickList[item.path] ?? 0;
-    item.hits = item.hits > cacheHits ? item.hits : cacheHits;
-    item.idePath = item.idePath || '';
+    const cacheItem = needMergeList[item.path] ?? {};
+    const { hits = 0, idePath = '' } = cacheItem;
+    item.hits = item.hits > hits ? item.hits : hits;
+    item.idePath = idePath;
   });
   return newCache;
 }
@@ -103,46 +104,82 @@ export async function findProject(dirPath: string): Promise<Project[]> {
   return result;
 }
 
+// 判断项目下的文件列表是否包含需要搜索的文件列表
+function findFileFromProject(
+  allFile: ChildInfo[],
+  fileNames: string[]
+): boolean {
+  const reg = new RegExp(`^(${fileNames.join('|')})$`, 'i');
+  const findFileList = allFile.filter(({ name }: { name: string }) =>
+    reg.test(name)
+  );
+
+  return findFileList.length === fileNames.length;
+}
+
+function findDependFromPackage(
+  allDependList: string[],
+  dependList: string[]
+): boolean {
+  const reg = new RegExp(`^(${dependList.join('|')})$`, 'i');
+  const findDependList = allDependList.filter((item: string) => reg.test(item));
+
+  return findDependList.length >= dependList.length;
+}
+
+async function getDependList(allFile: ChildInfo[]): Promise<string[]> {
+  const packageJsonFilePath =
+    allFile.find(({ name }) => name === 'package.json')?.path ?? '';
+  if (!packageJsonFilePath) {
+    return [];
+  }
+  const { dependencies = [], devDependencies = [] } = JSON.parse(
+    await readFile(packageJsonFilePath)
+  );
+  const dependList = { ...dependencies, ...devDependencies };
+  return Object.keys(dependList);
+}
+
 // 解析项目类型
 async function projectTypeParse(children: ChildInfo[]): Promise<string> {
-  let type = 'unknown';
-  for (let i = 0; i < children.length; i++) {
-    const { name } = children[i];
-    const lowName = name.toLocaleLowerCase();
-    if (lowName === 'nuxt.config.js') {
-      type = 'nuxt';
-      break;
-    }
-    if (lowName === 'vue.config.js') {
-      type = 'vue';
-      break;
-    }
-    if (lowName === '.vscodeignore') {
-      type = 'vscode';
-      break;
-    }
-    if (lowName === 'cargo.toml') {
-      type = 'rust';
-      break;
-    }
-    if (lowName === 'pubspec.yaml') {
-      type = 'dart';
-      break;
-    }
-    if (lowName === '_config.yml') {
-      type = 'hexo';
-      break;
-    }
-    if (lowName === 'tsconfig.json') {
-      type = 'typescript';
-      break;
-    }
-    if (lowName === 'package.json') {
-      type = 'javascript';
-      break;
-    }
+  if (findFileFromProject(children, ['cargo.toml'])) {
+    return 'rust';
   }
-  return type;
+  if (findFileFromProject(children, ['pubspec.yaml'])) {
+    return 'dart';
+  }
+  if (findFileFromProject(children, ['.*.xcodeproj'])) {
+    return 'applescript';
+  }
+  if (findFileFromProject(children, ['app', 'gradle'])) {
+    return 'android';
+  }
+  // js 项目还可以细分
+  if (findFileFromProject(children, ['package.json'])) {
+    if (findFileFromProject(children, ['nuxt.config.js'])) {
+      return 'nuxt';
+    }
+    if (findFileFromProject(children, ['vue.config.js'])) {
+      return 'vue';
+    }
+    if (findFileFromProject(children, ['.vscodeignore'])) {
+      return 'vscode';
+    }
+
+    const isTS = findFileFromProject(children, ['tsconfig.json']);
+    const dependList = await getDependList(children);
+
+    if (findDependFromPackage(dependList, ['react'])) {
+      return isTS ? 'react_ts' : 'react';
+    }
+
+    if (findDependFromPackage(dependList, ['hexo'])) {
+      return 'hexo';
+    }
+
+    return isTS ? 'typescript' : 'javascript';
+  }
+  return 'unknown';
 }
 
 // 输出待选列表给 Alfred

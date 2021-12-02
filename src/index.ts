@@ -28,6 +28,17 @@ async function main() {
       },
     });
   }
+  if (!result.length) {
+    result.push({
+      title: `没有找到名称包含 ${keyword} 的项目`,
+      subtitle: '请尝试更换关键词',
+      arg: keyword,
+      valid: false,
+      icon: {
+        path: 'assets/empty.png',
+      },
+    });
+  }
   console.log(JSON.stringify({ items: result }));
 }
 
