@@ -1,6 +1,6 @@
 declare var tjs: any;
 import { filterWithCache, filterWithSearchResult } from './utils';
-import { resultItem } from './type';
+import { ResultItem } from './type';
 
 // 判断是否需要刷新缓存
 const needRefresh: boolean = Array.from(tjs.args).includes('--r');
@@ -9,7 +9,7 @@ const needRefresh: boolean = Array.from(tjs.args).includes('--r');
 const keyword: string = (Array.from(tjs.args).pop() as string) ?? '';
 
 async function main() {
-  let result: resultItem[] = await filterWithCache(keyword);
+  let result: ResultItem[] = await filterWithCache(keyword);
   let fromCache = true;
   // 如果缓存结果为空或者需要刷新缓存，则重新搜索
   if (!result.length || needRefresh) {
