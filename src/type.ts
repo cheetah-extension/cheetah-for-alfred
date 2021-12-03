@@ -15,7 +15,7 @@ export interface Project {
 }
 
 // 返回给 Alfred 的条目信息
-export interface resultItem {
+export interface ResultItem {
   title: string;
   subtitle: string;
   arg: string;
@@ -23,4 +23,9 @@ export interface resultItem {
   icon: {
     path: string;
   };
+}
+
+export interface Config {
+  editor: { [key: string]: string };
+  cache: Project[];
 }

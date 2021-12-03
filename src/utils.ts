@@ -1,7 +1,7 @@
 declare var tjs: any;
 declare var TextDecoder: any;
 import * as path from 'path-browserify';
-import { ChildInfo, Project, resultItem } from './type';
+import { ChildInfo, Project, ResultItem, Config } from './type';
 
 // 如果工作目录未指定，则使用用户目录下的Documents目录
 let workspace = tjs.getenv('workspace');
@@ -10,13 +10,16 @@ if (!workspace) {
 }
 
 // 缓存路径
-const cachePath = path.join(tjs.cwd(), '.cache.json');
+const cachePath = path.join(tjs.cwd(), 'config.json');
 
 // 写入缓存
 export async function writeCache(newCache: Project[]): Promise<void> {
   try {
+    const { editor } = await readCache();
     const cacheFile = await tjs.fs.open(cachePath, 'rw', 0o666);
-    const historyString = JSON.stringify(newCache, null, 2);
+    const newEditorList = combinedEditorList(editor, newCache);
+    const newConfig = { editor: newEditorList, cache: newCache };
+    const historyString = JSON.stringify(newConfig, null, 2);
     await cacheFile.write(historyString);
     cacheFile.close();
   } catch (error: any) {
@@ -24,9 +27,21 @@ export async function writeCache(newCache: Project[]): Promise<void> {
   }
 }
 
+// 合并编辑器
+function combinedEditorList(editor: { [key: string]: string }, cache: Project[]) {
+  const newEditor = { ...editor };
+  const currentEditor = Object.keys(newEditor);
+  cache.forEach(({ type }: Project) => {
+    if (!currentEditor.includes(type)) {
+      newEditor[type] = '';
+    }
+  });
+  return newEditor;
+}
+
 // 更新缓存时合并项目点击数
 async function combinedCache(newCache: Project[]): Promise<Project[]> {
-  const cache = await readCache();
+  const { cache } = await readCache();
   // 筛选有点击记录的项目
   const needMergeList = {} as { [key: string]: Project };
   cache
@@ -52,15 +67,16 @@ async function readFile(filePath: string): Promise<string> {
 }
 
 // 读取缓存
-export async function readCache() {
+export async function readCache(): Promise<Config> {
   try {
     const history = await readFile(cachePath);
-    return JSON.parse(history);
+    return JSON.parse(history) ?? { editor: {}, cache: [] };
   } catch (error: any) {
     if (error.message === 'no such file or directory') {
       writeCache([]);
-      return [];
+      return { editor: {}, cache: [] };
     }
+    return { editor: {}, cache: [] };
   }
 }
 
@@ -183,7 +199,7 @@ async function projectTypeParse(children: ChildInfo[]): Promise<string> {
 }
 
 // 输出待选列表给 Alfred
-export function output(projectList: Project[]): resultItem[] {
+export function output(projectList: Project[]): ResultItem[] {
   const result = projectList.map(
     ({ name, path, type }: { name: string; path: string; type: string }) => {
       return {
@@ -228,15 +244,15 @@ export function filterProject(
 }
 
 // 从缓存中过滤
-export async function filterWithCache(keyword: string): Promise<resultItem[]> {
-  const cache = await readCache();
+export async function filterWithCache(keyword: string): Promise<ResultItem[]> {
+  const { cache } = await readCache();
   return output(filterProject(cache, keyword));
 }
 
 // 从搜索结果中过滤
 export async function filterWithSearchResult(
   keyword: string
-): Promise<resultItem[]> {
+): Promise<ResultItem[]> {
   const projectList: Project[] = await findProject(workspace);
   writeCache(await combinedCache(projectList));
   return output(filterProject(projectList, keyword));
