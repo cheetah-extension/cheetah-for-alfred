@@ -3,14 +3,16 @@ declare var TextDecoder: any;
 import * as path from 'path-browserify';
 import { ChildInfo, Project, ResultItem, Config } from './type';
 
+const HOME_PATH = tjs.getenv('HOME');
+
 // 如果工作目录未指定，则使用用户目录下的Documents目录
 let workspace = tjs.getenv('workspace');
 if (!workspace) {
-  workspace = `${tjs.getenv('HOME')}/Documents`;
+  workspace = `${HOME_PATH}/Documents`;
 }
 
 // 缓存路径
-const cachePath = path.join(tjs.cwd(), 'config.json');
+const cachePath = path.join(`${HOME_PATH}/.alfred/fmcat/openProject`, 'config.json');
 
 // 写入缓存
 export async function writeCache(newCache: Project[]): Promise<void> {
@@ -272,7 +274,7 @@ export function filterProject(
 
 // 在多个工作目录下搜索项目，工作目录以英文逗号分隔
 async function batchFindProject() {
-  const workspaces = workspace.split(',');
+  const workspaces = workspace.split(/,|，/);
   const projectList: Project[] = [];
   for (let i = 0; i < workspaces.length; i += 1) {
     const dirPath = workspaces[i];
