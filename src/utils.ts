@@ -3,14 +3,16 @@ declare var TextDecoder: any;
 import * as path from 'path-browserify';
 import { ChildInfo, Project, ResultItem, Config } from './type';
 
+const HOME_PATH = tjs.getenv('HOME');
+
 // 如果工作目录未指定，则使用用户目录下的Documents目录
 let workspace = tjs.getenv('workspace');
 if (!workspace) {
-  workspace = `${tjs.getenv('HOME')}/Documents`;
+  workspace = `${HOME_PATH}/Documents`;
 }
 
 // 缓存路径
-const cachePath = path.join(tjs.cwd(), 'config.json');
+const cachePath = path.join(`${HOME_PATH}/.alfred/fmcat/openProject`, 'config.json');
 
 // 写入缓存
 export async function writeCache(newCache: Project[]): Promise<void> {
@@ -28,7 +30,10 @@ export async function writeCache(newCache: Project[]): Promise<void> {
 }
 
 // 合并编辑器
-function combinedEditorList(editor: { [key: string]: string }, cache: Project[]) {
+function combinedEditorList(
+  editor: { [key: string]: string },
+  cache: Project[]
+) {
   const newEditor = { ...editor };
   const currentEditor = Object.keys(newEditor);
   cache.forEach(({ type }: Project) => {
@@ -99,6 +104,10 @@ export async function findProject(dirPath: string): Promise<Project[]> {
     ({ name }: { name: string }) => name === '.git'
   );
 
+  const hasSubmodules = currentChildren.some(
+    ({ name }: { name: string }) => name === '.gitmodules'
+  );
+
   if (isGitProject) {
     result.push({
       name: path.basename(dirPath),
@@ -107,17 +116,37 @@ export async function findProject(dirPath: string): Promise<Project[]> {
       hits: 0,
       idePath: '',
     });
-  } else {
-    const nextLevelDir = currentChildren.filter(
+  }
+  
+  let nextLevelDir: ChildInfo[] = [];
+  if (!isGitProject) {
+    nextLevelDir = currentChildren.filter(
       ({ isDir }: { isDir: boolean }) => isDir
     );
-    for (let i = 0; i < nextLevelDir.length; i += 1) {
-      const dir = nextLevelDir[i];
-      result.push(...(await findProject(path.join(dirPath, dir.name))));
-    }
+  }
+  if (isGitProject && hasSubmodules) {
+    nextLevelDir = await findSubmodules(path.join(dirPath, '.gitmodules'));
+  }
+
+  for (let i = 0; i < nextLevelDir.length; i += 1) {
+    const dir = nextLevelDir[i];
+    result.push(...(await findProject(path.join(dirPath, dir.name))));
   }
 
   return result;
+}
+
+// 查找项目内的 submodule
+export async function findSubmodules(filePath: string): Promise<ChildInfo[]> {
+  const fileContent = await readFile(filePath);
+  const matchModules = fileContent.match(/(?<=path = )([\S]*)(?=\n)/g) ?? [];
+  return matchModules.map((module) => {
+    return {
+      name: module,
+      isDir: true,
+      path: path.join(path.dirname(filePath), module),
+    };
+  });
 }
 
 // 判断项目下的文件列表是否包含需要搜索的文件列表
@@ -243,6 +272,18 @@ export function filterProject(
   ];
 }
 
+// 在多个工作目录下搜索项目，工作目录以英文逗号分隔
+async function batchFindProject() {
+  const workspaces = workspace.split(/,|，/);
+  const projectList: Project[] = [];
+  for (let i = 0; i < workspaces.length; i += 1) {
+    const dirPath = workspaces[i];
+    const children = await findProject(dirPath);
+    projectList.push(...children);
+  }
+  return projectList;
+}
+
 // 从缓存中过滤
 export async function filterWithCache(keyword: string): Promise<ResultItem[]> {
   const { cache } = await readCache();
@@ -253,7 +294,7 @@ export async function filterWithCache(keyword: string): Promise<ResultItem[]> {
 export async function filterWithSearchResult(
   keyword: string
 ): Promise<ResultItem[]> {
-  const projectList: Project[] = await findProject(workspace);
+  const projectList: Project[] = await batchFindProject();
   writeCache(await combinedCache(projectList));
   return output(filterProject(projectList, keyword));
 }
