@@ -6,16 +6,13 @@
 
 ### idePath
 
-编辑器路径，需要系统绝对路径，以 .app 结尾。目前支持的编辑器有 VSCode、WebStorm、Atom、Sublime Text，使用其他编辑器的朋友可以参考判断条件添加打开命令。当编辑器路径为空时，将在 Finder 中打开项目文件夹。
+编辑器名称，在`/Applications`目录下的 App 可以直接填入名称，~~以 .app 结尾~~(经测试可以不加`.app`但是需要保证 App 名称单词拼写是正确的)。当编辑器路径为空时，将在 Finder 中打开项目文件夹。  
+如果 App 不在`/Applications`目录下则需要填入其绝对路径。
 
 ### workspace
 
 项目存放的目录，距离项目的层级越近越好，层级越多，搜索速度会越慢。默认目录为 用户文件夹下的 Documents,比如 “/Users/ronglecat/Documents”。  
 现已支持多目录配置，以英文逗号分隔。
-
-### force
-
-值为 1 时强制使用变量中配置的编辑器打开项目，为 0 时则按照项目编辑器配置的权重，cache 中单个项目编辑器 > 项目类型编辑器 > idePath 变量配置的编辑器。（尽量不要修改）
 
 ## 使用
 
@@ -54,6 +51,7 @@ workflows 中提供了两个快捷键的绑定入口，第一个是通过配置�
 在列表中选择项目后获得项目的绝对路径，通过编辑器的命令行打开即可。
 
 ### 缓存目录
+
 缓存的路径为 $HOME/.alfred/fmcat/openProject/config.json
 
 ## 开发注意事项
@@ -67,3 +65,13 @@ workflows 中提供了两个快捷键的绑定入口，第一个是通过配置�
 ### 构建
 
 运行根目录下 build.sh 文件会调用 webpack 构建项目并将结果复制到 Alfred Workflows 的文件夹中。每个 Workflows 有不同的 id，新建时会自动生成，所以需要手动替换。
+
+## 快捷键入口
+
+设置快捷键能够快速完成使用指定 APP 打开项目。
+
+![](https://pic.fmcat.top/picgo/20211227233908.png)
+
+快捷键可以在导入后自行设置，终端、Git GUI 可以设置自己喜欢的软件，比如 iTerm、SourceTree、Fork 等等，在下图所示位置配置：
+
+![](https://pic.fmcat.top/picgo/20211227234217.png)

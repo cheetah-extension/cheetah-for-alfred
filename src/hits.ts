@@ -1,10 +1,10 @@
 declare var tjs: any;
-import { readCache, writeCache } from './utils';
+import { readCache, writeCache, getEnv } from './utils';
 import { Project } from './type';
 
 // 项目搜索关键词
 const projectPath: string = (Array.from(tjs.args).pop() as string) ?? '';
-const force = tjs.getenv('force') === '1';
+const force = getEnv('force', '0') === '1';
 
 async function main() {
   // 获取路径对应的项目详情

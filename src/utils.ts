@@ -1,6 +1,6 @@
 declare var tjs: any;
 declare var TextDecoder: any;
-import * as path from 'path-browserify';
+import path from 'path-browserify';
 import { ChildInfo, Project, ResultItem, Config } from './type';
 
 const HOME_PATH = tjs.getenv('HOME');
@@ -12,7 +12,18 @@ if (!workspace) {
 }
 
 // 缓存路径
-const cachePath = path.join(`${HOME_PATH}/.alfred/fmcat/openProject`, 'config.json');
+const cachePath = path.join(
+  `${HOME_PATH}/.alfred/fmcat/openProject`,
+  'config.json'
+);
+
+export function getEnv(key: string, defaultValue: any = '') {
+  try {
+    return tjs.getenv(key);
+  } catch (error) {
+    return defaultValue;
+  }
+}
 
 // 写入缓存
 export async function writeCache(newCache: Project[]): Promise<void> {
@@ -117,7 +128,7 @@ export async function findProject(dirPath: string): Promise<Project[]> {
       idePath: '',
     });
   }
-  
+
   let nextLevelDir: ChildInfo[] = [];
   if (!isGitProject) {
     nextLevelDir = currentChildren.filter(
