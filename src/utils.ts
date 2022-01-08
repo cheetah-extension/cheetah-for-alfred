@@ -90,7 +90,6 @@ export async function readCache(): Promise<Config> {
   } catch (error: any) {
     if (error.message === 'no such file or directory') {
       writeCache([]);
-      return { editor: {}, cache: [] };
     }
     return { editor: {}, cache: [] };
   }
@@ -100,7 +99,13 @@ export async function readCache(): Promise<Config> {
 export async function findProject(dirPath: string): Promise<Project[]> {
   const result: Project[] = [];
   const currentChildren: ChildInfo[] = [];
-  const dirIter = await tjs.fs.readdir(dirPath);
+  let dirIter;
+
+  try {
+    dirIter = await tjs.fs.readdir(dirPath);
+  } catch (error) {
+    return result;
+  }
 
   for await (const item of dirIter) {
     const { name, type }: { name: string; type: number } = item;
@@ -267,10 +272,13 @@ export function filterProject(
   });
 
   // 排序规则：项目名称以关键词开头的权重最高，剩余的以点击量降序排序
+  const congruentMatch: Project[] = [];
   const startMatch: Project[] = [];
   const otherMatch: Project[] = [];
   result.forEach((item) => {
-    if (item.name.startsWith(keyword)) {
+    if (item.name.toLocaleLowerCase() === keyword.toLocaleLowerCase()) {
+      congruentMatch.push(item);
+    } else if (item.name.startsWith(keyword)) {
       startMatch.push(item);
     } else {
       otherMatch.push(item);
@@ -278,6 +286,7 @@ export function filterProject(
   });
 
   return [
+    ...congruentMatch.sort((a: Project, b: Project) => b.hits - a.hits),
     ...startMatch.sort((a: Project, b: Project) => b.hits - a.hits),
     ...otherMatch.sort((a: Project, b: Project) => b.hits - a.hits),
   ];
