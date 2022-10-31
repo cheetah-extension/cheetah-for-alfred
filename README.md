@@ -61,7 +61,9 @@ workflows 中提供了两个快捷键的绑定入口，第一个是通过配置�
 
 ### txiki
 
-为了实现不需要配置 Node 即可完成文件操作的功能，使用了一个简洁的 javascript 运行时项目，它是基于 [Quick.js](https://bellard.org/quickjs/)开发，以 c 语言实现一些系统操作的扩展。
+为了实现不需要配置 Node 即可完成文件操作的功能，使用了一个简洁的 javascript 运行时项目，它是基于 [Quick.js](https://bellard.org/quickjs/)开发，以 c 语言实现一些系统操作的扩展。  
+
+当前 `txiki` 版本为 `v19.0.0-alpha`
 
 项目地址：https://github.com/saghul/txiki.js
 

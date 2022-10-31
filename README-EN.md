@@ -61,7 +61,9 @@ The path to the cache is $HOME/.alfred/fmcat/cheetah/config.json
 
 ### txiki
 
-In order to implement file operations without configuring Node, a clean javascript runtime project was used, based on [Quick.js](https://bellard.org/quickjs/), which implements some system operations extensions in c.
+In order to implement file operations without configuring Node, a clean javascript runtime project was used, based on [Quick.js](https://bellard.org/quickjs/), which implements some system operations extensions in c.  
+
+The current version of `txiki` is `v19.0.0-alpha`
 
 Project address: https://github.com/saghul/txiki.js
 
