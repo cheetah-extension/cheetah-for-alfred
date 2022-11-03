@@ -5,11 +5,17 @@
   "main": "index.js",
   "scripts": {
     "watch": "rollup -c -w",
-    "compile": "./build.sh"
+    "compile": "script/build.sh",
+    "test": "script/test.sh"
   },
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "path-browserify": "^1.0.1",
+    "cheetah-core": "file:/Users/caohaoxia/Documents/work/tools/cheetah-core"
+  },
   "devDependencies": {
+    "@types/path-browserify": "^1.0.0",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-typescript": "^1.0.1",
@@ -17,9 +23,5 @@
     "ts-loader": "^8.2.0",
     "tslib": "^2.3.1",
     "typescript": "^4.5.2"
-  },
-  "dependencies": {
-    "@types/path-browserify": "^1.0.0",
-    "path-browserify": "^1.0.1"
   }
 }
