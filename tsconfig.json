@@ -11,6 +11,10 @@
 		"strict": true,
 		"esModuleInterop": true,
 	},
+  "include": [
+    "src/**/*",
+    "declares/**/*"
+  ],
 	"exclude": [
 		"node_modules",
 		".vscode-test"

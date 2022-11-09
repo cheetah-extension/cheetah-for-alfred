@@ -21,31 +21,6 @@ async function main() {
       fromCache = false;
     }
 
-    const result: ResultItem[] = output(projects);
-    // 如果是从缓存中获取的内容，最后加上刷新的入口
-    if (fromCache) {
-      result.push({
-        title: '忽略缓存重新搜索',
-        subtitle: '以上结果从缓存中获得,选择本条将重新搜索项目并更新缓存',
-        arg: keyword,
-        valid: true,
-        icon: {
-          path: 'assets/refresh.png',
-        },
-      });
-    }
-    if (!result.length) {
-      result.push({
-        title: `没有找到名称包含 ${keyword} 的项目`,
-        subtitle: '请尝试更换关键词',
-        arg: keyword,
-        valid: false,
-        icon: {
-          path: 'assets/empty.png',
-        },
-      });
-    }
-    console.log(JSON.stringify({ items: result }));
   } catch (error) {
     errorHandle(error);
   }
